@@ -22,7 +22,7 @@ pipeline {
                     if [ ! -d "$DEPLOY_DIR/venv" ]; then
                         python3 -m venv $DEPLOY_DIR/venv  # Create virtual environment if not exists
                     fi
-                    source $DEPLOY_DIR/venv/bin/activate  # Activate virtual environment
+                    . $DEPLOY_DIR/venv/bin/activate  # Activate virtual environment
                     pip install -r $DEPLOY_DIR/requirements.txt  # Install dependencies
                     '''
                 }
@@ -34,7 +34,7 @@ pipeline {
                 script {
                     // Optional: Run tests before deploying
                     sh '''
-                    source $DEPLOY_DIR/venv/bin/activate
+                    . $DEPLOY_DIR/venv/bin/activate
                     pytest $DEPLOY_DIR/tests/  # Run tests if you have any
                     '''
                 }
@@ -49,7 +49,7 @@ pipeline {
                     sh '''
                     cp -r * $DEPLOY_DIR
                     cd $DEPLOY_DIR
-                    source venv/bin/activate  # Activate virtual environment
+                    . venv/bin/activate  # Activate virtual environment
                     export FLASK_APP=app.py
                     export FLASK_ENV=production  # Or 'development' if you prefer
                     nohup flask run --host=0.0.0.0 --port=5000 &> flask.log &  # Run Flask in the background
