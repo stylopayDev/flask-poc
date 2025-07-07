@@ -13,37 +13,27 @@ pipeline {
             }
         }
 
-        stage('Prepare Environment') {
+        stage('Copy to Deploy Directory') {
             steps {
                 sh '''
-                    #!/bin/bash
-                    set -e  # fail on any error
-
-                    echo "[*] Creating deploy directory if it doesn't exist..."
                     mkdir -p $DEPLOY_DIR
-
-                    echo "[*] Copying project files..."
                     cp -r * $DEPLOY_DIR
                 '''
             }
         }
 
-        stage('Setup Virtualenv & Install Dependencies') {
+        stage('Set Up Virtualenv & Install Dependencies') {
             steps {
                 sh '''
-                    #!/bin/bash
-                    set -e
+                    cd $DEPLOY_DIR
 
-                    echo "[*] Checking if venv exists..."
-                    if [ ! -d "$VENV_DIR" ]; then
-                        echo "[*] Creating virtual environment..."
-                        python3 -m venv $VENV_DIR
+                    if [ ! -d "venv" ]; then
+                        python3 -m venv venv
                     fi
 
-                    echo "[*] Activating virtual environment and installing dependencies..."
-                    source $VENV_DIR/bin/activate
+                    . venv/bin/activate
                     pip install --upgrade pip
-                    pip install -r $DEPLOY_DIR/requirements.txt
+                    pip install -r requirements.txt
                 '''
             }
         }
@@ -51,18 +41,16 @@ pipeline {
         stage('Run Flask App') {
             steps {
                 sh '''
-                    #!/bin/bash
-                    set -e
-
-                    echo "[*] Starting Flask app..."
                     cd $DEPLOY_DIR
-                    source venv/bin/activate
+                    . venv/bin/activate
+
                     export FLASK_APP=app.py
                     export FLASK_ENV=production
 
-                    # Kill previous flask if any (naive but works for POC)
+                    # Kill any previously running Flask instance
                     pkill -f "flask run" || true
 
+                    # Run Flask in background
                     nohup flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
                 '''
             }
@@ -71,7 +59,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment Successful!'
+            echo '✅ Flask App Deployed Successfully!'
         }
         failure {
             echo '❌ Deployment Failed!'
