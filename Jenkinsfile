@@ -13,16 +13,6 @@ pipeline {
             }
         }
 
-        stage('Clean Deploy Directory') {
-            steps {
-                sh '''
-                    sudo rm -rf $DEPLOY_DIR/*
-                    sudo mkdir -p $DEPLOY_DIR
-                    sudo chown -R $(whoami):$(whoami) $DEPLOY_DIR
-                '''
-            }
-        }
-
         stage('Copy to Deploy Directory') {
             steps {
                 sh '''
