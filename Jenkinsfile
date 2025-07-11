@@ -33,10 +33,10 @@ pipeline {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
-                    if [ -f requirement.txt ]; then
-                        pip3 install --user -r requirement.txt
+                    if [ -f requirements.txt ]; then
+                        pip3 install --user -r requirements.txt
                     else
-                        echo "ERROR: requirement.txt not found in $DEPLOY_DIR"
+                        echo "ERROR: requirements.txt not found in $DEPLOY_DIR"
                         exit 1
                     fi
                 '''
