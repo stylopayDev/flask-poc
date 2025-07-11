@@ -9,14 +9,9 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/stylopayDev/flask-poc.git'
-            }
-        }
-
-        stage('Copy to Deploy Directory') {
-            steps {
                 sh '''
-                    cp -r * $DEPLOY_DIR
+                    rm -rf $DEPLOY_DIR
+                    git clone https://github.com/stylopayDev/flask-poc.git $DEPLOY_DIR
                 '''
             }
         }
@@ -25,7 +20,12 @@ pipeline {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
-                    pip3 install --user -r requirements.txt
+                    if [ -f requirements.txt ]; then
+                        pip3 install --user -r requirements.txt
+                    else
+                        echo "requirements.txt not found!"
+                        exit 1
+                    fi
                 '''
             }
         }
@@ -38,10 +38,8 @@ pipeline {
                     export FLASK_APP=app.py
                     export FLASK_ENV=production
 
-                    # Kill any previously running Flask app
                     pkill -f "flask run" || true
 
-                    # Run Flask in background using full path
                     nohup $FLASK_CMD run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
                 '''
             }
