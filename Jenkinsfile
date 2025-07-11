@@ -2,79 +2,69 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_DIR = '/var/www/flaskapp'  // Path to your Flask app directory
-        APP_NAME = 'flaskapp'
+        DEPLOY_DIR = '/var/www/flaskapp'
+        FLASK_CMD = "${HOME}/.local/bin/flask"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Pull the latest code from GitHub
                 git 'https://github.com/stylopayDev/flask-poc.git'
+            }
+        }
+
+        stage('Prepare Deploy Directory') {
+            steps {
+                sh '''
+                    rm -rf $DEPLOY_DIR/*
+                '''
+            }
+        }
+
+        stage('Copy to Deploy Directory') {
+            steps {
+                sh '''
+                    cp -r * $DEPLOY_DIR
+                '''
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                script {
-                    // Set up the Python virtual environment and install dependencies locally
-                    sh '''
-                    if [ ! -d "$DEPLOY_DIR/venv" ]; then
-                        python3 -m venv $DEPLOY_DIR/venv  # Create virtual environment if not exists
-                    fi
-                    . $DEPLOY_DIR/venv/bin/activate  # Activate virtual environment
-                    pip install -r $DEPLOY_DIR/requirements.txt  # Install dependencies
-                    '''
-                }
-            }
-        }
-
-        stage('Test Application') {
-            steps {
-                script {
-                    // Optional: Run tests before deploying
-                    sh '''
-                    . $DEPLOY_DIR/venv/bin/activate
-                    pytest $DEPLOY_DIR/tests/  # Run tests if you have any
-                    '''
-                }
-            }
-        }
-
-        stage('Deploy Application') {
-            steps {
-                script {
-                    // Deploy by copying the files to the deploy directory
-                    // Since Jenkins is on the same server, no need for SCP or SSH
-                    sh '''
-                    cp -r * $DEPLOY_DIR
+                sh '''
                     cd $DEPLOY_DIR
-                    . venv/bin/activate  # Activate virtual environment
-                    export FLASK_APP=app.py
-                    export FLASK_ENV=production  # Or 'development' if you prefer
-                    nohup flask run --host=0.0.0.0 --port=5000 &> flask.log &  # Run Flask in the background
-                    '''
-                }
+                    if [ -f requirement.txt ]; then
+                        pip3 install --user -r requirement.txt
+                    else
+                        echo "ERROR: requirement.txt not found in $DEPLOY_DIR"
+                        exit 1
+                    fi
+                '''
             }
         }
 
-        stage('Clean up') {
+        stage('Run Flask App') {
             steps {
-                script {
-                    // Optional cleanup after deployment
-                    echo "Cleaning up after deployment"
-                    // You could remove temporary files, clear logs, etc.
-                }
+                sh '''
+                    cd $DEPLOY_DIR
+
+                    export FLASK_APP=app.py
+                    export FLASK_ENV=production
+
+                    pkill -f "flask run" || true
+
+                    nohup $FLASK_CMD run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Deployment Successful!'
+            echo '✅ Flask App Deployed Successfully!'
         }
         failure {
-            echo 'Deployment Failed!'
+            echo '❌ Deployment Failed!'
         }
     }
 }
