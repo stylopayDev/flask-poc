@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DEPLOY_DIR = '/var/www/flaskapp'
-        VENV_DIR = '/var/www/flaskapp/venv'
+        FLASK_CMD = "${HOME}/.local/bin/flask"
     }
 
     stages {
@@ -13,27 +13,29 @@ pipeline {
             }
         }
 
+        stage('Clean Deploy Directory') {
+            steps {
+                sh '''
+                    sudo rm -rf $DEPLOY_DIR/*
+                    sudo mkdir -p $DEPLOY_DIR
+                    sudo chown -R $(whoami):$(whoami) $DEPLOY_DIR
+                '''
+            }
+        }
+
         stage('Copy to Deploy Directory') {
             steps {
                 sh '''
-                    mkdir -p $DEPLOY_DIR
                     cp -r * $DEPLOY_DIR
                 '''
             }
         }
 
-        stage('Set Up Virtualenv & Install Dependencies') {
+        stage('Install Dependencies') {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
-
-                    if [ ! -d "venv" ]; then
-                        python3 -m venv venv
-                    fi
-
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    pip3 install --user -r requirements.txt
                 '''
             }
         }
@@ -42,16 +44,15 @@ pipeline {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
-                    . venv/bin/activate
 
                     export FLASK_APP=app.py
                     export FLASK_ENV=production
 
-                    # Kill any previously running Flask instance
+                    # Kill any previously running Flask app
                     pkill -f "flask run" || true
 
-                    # Run Flask in background
-                    nohup flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+                    # Run Flask in background using full path
+                    nohup $FLASK_CMD run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
                 '''
             }
         }
