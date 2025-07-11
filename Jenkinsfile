@@ -9,9 +9,22 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
+                git 'https://github.com/stylopayDev/flask-poc.git'
+            }
+        }
+
+        stage('Prepare Deploy Directory') {
+            steps {
                 sh '''
-                    rm -rf $DEPLOY_DIR
-                    git clone https://github.com/stylopayDev/flask-poc.git $DEPLOY_DIR
+                    rm -rf $DEPLOY_DIR/*
+                '''
+            }
+        }
+
+        stage('Copy to Deploy Directory') {
+            steps {
+                sh '''
+                    cp -r * $DEPLOY_DIR
                 '''
             }
         }
@@ -23,7 +36,7 @@ pipeline {
                     if [ -f requirements.txt ]; then
                         pip3 install --user -r requirements.txt
                     else
-                        echo "requirements.txt not found!"
+                        echo "ERROR: requirements.txt not found in $DEPLOY_DIR"
                         exit 1
                     fi
                 '''
