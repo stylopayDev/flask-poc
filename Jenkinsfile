@@ -29,20 +29,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                    cd $DEPLOY_DIR
-                    if [ -f requirements.txt ]; then
-                        pip3 install --user -r requirements.txt
-                    else
-                        echo "ERROR: requirements.txt not found in $DEPLOY_DIR"
-                        exit 1
-                    fi
-                '''
-            }
-        }
-
         stage('Run Flask App') {
             steps {
                 sh '''
