@@ -52,12 +52,12 @@ pipeline {
                     cd $DEPLOY_DIR
                     touch flask.log
                     chmod 666 flask.log
-                    
+
                     # Kill existing app.py process if any
-                    pkill -f "python app.py" || true
+                    pkill -f "$DEPLOY_DIR/venv/bin/python app.py" || true
 
                     . venv/bin/activate
-                    nohup python app.py > flask.log 2>&1 &
+                    nohup $DEPLOY_DIR/venv/bin/python app.py &
                 '''
             }
         }
