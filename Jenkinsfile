@@ -73,7 +73,7 @@ pipeline {
                     # Run the app using venv flask
                     . venv/bin/activate
                     nohup $FLASK_CMD run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
-                    disown
+                    sleep 5
                 '''
             }
         }
