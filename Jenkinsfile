@@ -54,9 +54,9 @@ pipeline {
                     chmod 666 flask.log
 
                     # Kill existing app.py process if any
-                    sudo pkill -f "$DEPLOY_DIR/venv/bin/python app.py" || true
+                    pkill -f "$DEPLOY_DIR/venv/bin/python app.py" || true
                     sleep 2
-                    nohup $DEPLOY_DIR/venv/bin/python app.py > flask.log 2>&1 &
+                    setsid $DEPLOY_DIR/venv/bin/python app.py >> flask.log 2>&1 < /dev/null &
                 '''
             }
         }
