@@ -47,7 +47,7 @@ pipeline {
 
                     # Create venv and activate
                     python3 -m venv venv
-                    source venv/bin/activate
+                    . venv/bin/activate
 
                     # Upgrade pip and install specific versions
                     pip install --upgrade pip
