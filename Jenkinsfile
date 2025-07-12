@@ -64,13 +64,16 @@ pipeline {
                     cd $DEPLOY_DIR
 
                     export FLASK_APP=app.py
-                    export FLASK_ENV=production
+                    export FLASK_DEBUG=0
+                    # export FLASK_ENV=production
 
                     # Kill old instance
                     pkill -f "flask run" || true
 
                     # Run the app using venv flask
+                    . venv/bin/activate
                     nohup $FLASK_CMD run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+                    disown
                 '''
             }
         }
