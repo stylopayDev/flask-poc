@@ -55,7 +55,7 @@ pipeline {
                     pkill -f "python app.py" || true
 
                     . venv/bin/activate
-                    nohup python app.py > flask.log 2>&1 &
+                    nohup python app.py &
                 '''
             }
         }
