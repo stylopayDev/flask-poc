@@ -55,9 +55,8 @@ pipeline {
 
                     # Kill existing app.py process if any
                     pkill -f "$DEPLOY_DIR/venv/bin/python app.py" || true
-
-                    . venv/bin/activate
-                    nohup $DEPLOY_DIR/venv/bin/python app.py &
+                    sleep 2
+                    nohup $DEPLOY_DIR/venv/bin/python app.py > flask.log 2>&1 &
                 '''
             }
         }
