@@ -4,7 +4,7 @@ pipeline {
     environment {
         DEPLOY_DIR = '/var/www/flaskapp'
         VENV_DIR = "${DEPLOY_DIR}/venv"
-        FLASK_CMD = "${VENV_DIR}/bin/flask"
+        GUNICORN_CMD = "${VENV_DIR}/bin/gunicorn"
     }
 
     stages {
@@ -45,35 +45,28 @@ pipeline {
                 sh '''
                     cd $DEPLOY_DIR
 
-                    # Create venv and activate
                     python3 -m venv venv
                     . venv/bin/activate
 
-                    # Upgrade pip and install specific versions
                     pip install --upgrade pip
 
-                    # Install requirements (make sure requirements.txt is fixed!)
+                    # Install your requirements plus gunicorn
                     pip install -r requirements.txt
+                    pip install gunicorn
                 '''
             }
         }
 
-        stage('Run Flask App') {
+        stage('Run Flask App with Gunicorn') {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
 
-                    export FLASK_APP=app.py
-                    export FLASK_DEBUG=0
-                    # export FLASK_ENV=production
+                    pkill -f "gunicorn" || true
 
-                    # Kill old instance
-                    pkill -f "flask run" || true
-
-                    # Run the app using venv flask
                     . venv/bin/activate
-                    nohup $FLASK_CMD run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
-                    sleep 5
+
+                    nohup $GUNICORN_CMD -w 4 -b 0.0.0.0:5000 app:app > flask.log 2>&1 &
                 '''
             }
         }
@@ -81,7 +74,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Flask App Deployed and Running!'
+            echo '✅ Flask App Deployed and Running with Gunicorn!'
         }
         failure {
             echo '❌ Deployment Failed!'
