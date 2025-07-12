@@ -4,14 +4,12 @@ pipeline {
     environment {
         DEPLOY_DIR = '/var/www/flaskapp'
         VENV_DIR = "${DEPLOY_DIR}/venv"
-        GUNICORN_CMD = "${VENV_DIR}/bin/gunicorn"
     }
 
     stages {
         stage('System Setup') {
             steps {
                 sh '''
-                    export DEBIAN_FRONTEND=noninteractive
                     sudo apt-get update -y
                     sudo apt-get install -y python3 python3-pip python3-venv
                 '''
@@ -26,45 +24,38 @@ pipeline {
 
         stage('Prepare Deploy Directory') {
             steps {
-                sh '''
-                    sudo rm -rf $DEPLOY_DIR/*
-                '''
+                sh "sudo rm -rf ${DEPLOY_DIR}/*"
             }
         }
 
         stage('Copy to Deploy Directory') {
             steps {
-                sh '''
-                    sudo cp -a . $DEPLOY_DIR
-                '''
+                sh "sudo cp -a . ${DEPLOY_DIR}"
             }
         }
 
-        stage('Install Dependencies in Venv') {
+        stage('Setup Virtualenv and Install Dependencies') {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
-
                     python3 -m venv venv
                     . venv/bin/activate
-
                     pip install --upgrade pip
-
-                    # Install your requirements plus gunicorn
                     pip install -r requirements.txt
-                    pip install gunicorn
                 '''
             }
         }
 
-        stage('Run Flask App with Gunicorn') {
+        stage('Run Flask App') {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
 
-                    source venv/bin/activate
-                    pkill -f "gunicorn" || true
-                    nohup gunicorn --bind 0.0.0.0:5000 app:app > flask.log 2>&1 &
+                    # Kill existing app.py process if any
+                    pkill -f "python app.py" || true
+
+                    . venv/bin/activate
+                    nohup python app.py > flask.log 2>&1 &
                 '''
             }
         }
@@ -72,7 +63,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Flask App Deployed and Running with Gunicorn!'
+            echo '✅ Flask App Deployed and Running!'
         }
         failure {
             echo '❌ Deployment Failed!'
