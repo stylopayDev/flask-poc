@@ -3,22 +3,17 @@ pipeline {
 
     environment {
         DEPLOY_DIR = '/var/www/flaskapp'
-        FLASK_CMD = 'flask'
+        VENV_DIR = "${DEPLOY_DIR}/venv"
+        FLASK_CMD = "${VENV_DIR}/bin/flask"
     }
 
     stages {
         stage('System Setup') {
             steps {
                 sh '''
-                    # Ensure non-interactive apt
                     export DEBIAN_FRONTEND=noninteractive
-
-                    # Update system and install necessary packages
                     sudo apt-get update -y
                     sudo apt-get install -y python3 python3-pip python3-venv
-
-                    # Upgrade pip
-                    sudo pip3 install --upgrade pip
                 '''
             }
         }
@@ -32,7 +27,6 @@ pipeline {
         stage('Prepare Deploy Directory') {
             steps {
                 sh '''
-                    # Clean out existing files inside deploy dir (but not the folder itself)
                     sudo rm -rf $DEPLOY_DIR/*
                 '''
             }
@@ -41,23 +35,25 @@ pipeline {
         stage('Copy to Deploy Directory') {
             steps {
                 sh '''
-                    # Copy everything including hidden files (e.g. .flaskenv, .env)
                     sudo cp -a . $DEPLOY_DIR
                 '''
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Dependencies in Venv') {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
 
-                    if [ -f requirements.txt ]; then
-                        sudo pip3 install -r requirements.txt
-                    else
-                        echo "ERROR: requirements.txt not found in $DEPLOY_DIR"
-                        exit 1
-                    fi
+                    # Create venv and activate
+                    python3 -m venv venv
+                    source venv/bin/activate
+
+                    # Upgrade pip and install specific versions
+                    pip install --upgrade pip
+
+                    # Install requirements (make sure requirements.txt is fixed!)
+                    pip install -r requirements.txt
                 '''
             }
         }
@@ -70,10 +66,10 @@ pipeline {
                     export FLASK_APP=app.py
                     export FLASK_ENV=production
 
-                    # Kill any previously running instance
+                    # Kill old instance
                     pkill -f "flask run" || true
 
-                    # Run Flask in the background
+                    # Run the app using venv flask
                     nohup $FLASK_CMD run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
                 '''
             }
@@ -82,7 +78,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Flask App Deployed Successfully!'
+            echo '✅ Flask App Deployed and Running!'
         }
         failure {
             echo '❌ Deployment Failed!'
