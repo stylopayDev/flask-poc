@@ -66,7 +66,8 @@ pipeline {
 
                     . venv/bin/activate
 
-                    nohup $GUNICORN_CMD -w 4 -b 0.0.0.0:5000 app:app > flask.log 2>&1 &
+                    # Start Gunicorn server
+                    nohup $VENV_DIR/bin/gunicorn --bind 0.0.0.0:5000 app:app > flask.log 2>&1 &
                 '''
             }
         }
