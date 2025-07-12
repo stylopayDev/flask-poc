@@ -62,12 +62,9 @@ pipeline {
                 sh '''
                     cd $DEPLOY_DIR
 
+                    source venv/bin/activate
                     pkill -f "gunicorn" || true
-
-                    . venv/bin/activate
-
-                    # Start Gunicorn server
-                    nohup $VENV_DIR/bin/gunicorn --bind 0.0.0.0:5000 app:app > flask.log 2>&1 &
+                    nohup gunicorn --bind 0.0.0.0:5000 app:app > flask.log 2>&1 &
                 '''
             }
         }
