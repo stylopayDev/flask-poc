@@ -38,8 +38,8 @@ pipeline {
             steps {
                 sh '''
                     cd $DEPLOY_DIR
-                    #python3 -m venv venv
-                    #. venv/bin/activate
+                    python3 -m venv venv
+                    . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
                 '''
