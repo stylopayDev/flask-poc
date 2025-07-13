@@ -49,17 +49,19 @@ pipeline {
         stage('Run Flask App') {
             steps {
                 sh '''
-                    cd $DEPLOY_DIR
-                    touch flask.log
-                    chmod 666 flask.log
+                    sudo systemctl restart flaskapp
+                    sudo systemctl status flaskapp --no-pager
+                    #cd $DEPLOY_DIR
+                    #touch flask.log
+                    #chmod 666 flask.log
 
                     # Kill existing app.py process if any
-                    pkill -f "/var/www/flaskapp/venv/bin/python app.py" || true
-                    sleep 10
-                    . venv/bin/activate
+                    #pkill -f "/var/www/flaskapp/venv/bin/python app.py" || true
+                    #sleep 10
+                    #. venv/bin/activate
                     # nohup /var/www/flaskapp/venv/bin/python app.py > flask.log 2>&1 &
-                    FLASK_APP=app.py flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
-                    sleep 10
+                    #FLASK_APP=app.py flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
+                    #sleep 10
                 '''
             }
         }
