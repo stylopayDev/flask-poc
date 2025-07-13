@@ -55,10 +55,9 @@ pipeline {
 
                     # Kill existing app.py process if any
                     pkill -f "/var/www/flaskapp/venv/bin/python app.py" || true
-                    # ps aux | grep '[p]ython app.py' | awk '{print $2}' | xargs -r kill || true
                     sleep 2
-                    . venv/bin/activate
-                    nohup /var/www/flaskapp/venv/bin/python app.py > flask.log 2>&1 &
+                    #. venv/bin/activate
+                    #nohup /var/www/flaskapp/venv/bin/python app.py > flask.log 2>&1 &
                 '''
             }
         }
