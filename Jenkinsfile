@@ -56,8 +56,9 @@ pipeline {
                     # Kill existing app.py process if any
                     pkill -f "/var/www/flaskapp/venv/bin/python app.py" || true
                     sleep 10
-                    #. venv/bin/activate
-                    nohup /var/www/flaskapp/venv/bin/python app.py > flask.log 2>&1 &
+                    . venv/bin/activate
+                    # nohup /var/www/flaskapp/venv/bin/python app.py > flask.log 2>&1 &
+                    FLASK_APP=app.py flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
                     sleep 10
                 '''
             }
